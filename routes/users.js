@@ -16,6 +16,7 @@ let endConnection = () => {
   con.end();
 }
 
+// call query(q) with q being an SQL query instead of con.query to make it work async, and await result
 const query = util.promisify(con.query).bind(con);
 
 /* GET users listing. */
@@ -23,15 +24,19 @@ router.get('/', function (req, res, next) {
   res.send('respond with a resource');
 });
 
+
+
 router.get('/register/:username/:password', async function (req, res, next) {
   let username = req.params.username;
   let password = req.params.password;
   let userId = await findUser(username);
+  
+  
   console.log(userId)
   res.send("hey");
 })
 
-
+// Searches for the username in the database. If found, return the user Id, else return -1
 let findUser = async (username) => {
   try {
     let q = `SELECT * FROM new_table WHERE username = \"${username}\"`
@@ -40,8 +45,8 @@ let findUser = async (username) => {
     // console.log(userEntry)
     return userEntry;
   } catch (e) {
-      // console.log(-1);
-      return -1;
+    // console.log(-1);
+    return -1;
   }
 }
 
