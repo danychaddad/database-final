@@ -12,7 +12,7 @@ CREATE TABLE `SITE_USER` (
   `date_of_birth` date NOT NULL,
   `gender` char(1) NOT NULL DEFAULT "o" COMMENT 'Taken for analytics purposes',
   `date_created` datetime NOT NULL DEFAULT now(),
-  `date_updated` datetime DEFAULT null,site_user
+  `date_updated` datetime DEFAULT null,
   `date_deleted` datetime DEFAULT null
 );
 
