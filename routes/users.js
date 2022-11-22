@@ -7,8 +7,8 @@ const { checkPass, hashPass } = require('../util/hashing');
 const con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "root",
-  database: "final-project-scratch"
+  password: "",
+  database: "markit"
 });
 
 // call query(q) with q being an SQL query instead of con.query to make it work async, and await result
