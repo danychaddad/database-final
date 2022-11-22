@@ -8,11 +8,11 @@ CREATE TABLE `SITE_USER` (
   `username` varchar(20) NOT NULL,
   `balance` decimal(8,2) NOT NULL DEFAULT 0 COMMENT 'Derived from credit_update and order_item',
   `display_picture` varchar(255) COMMENT 'Path to corresponding image',
-  `is_Moderator` boolean NOT NULL DEFAULT "false",
+  `is_Moderator` boolean NOT NULL DEFAULT FALSE,
   `date_of_birth` date NOT NULL,
   `gender` char(1) NOT NULL DEFAULT "o" COMMENT 'Taken for analytics purposes',
-  `date_created` datetime NOT NULL DEFAULT "now()",
-  `date_updated` datetime DEFAULT null,
+  `date_created` datetime NOT NULL DEFAULT now(),
+  `date_updated` datetime DEFAULT null,site_user
   `date_deleted` datetime DEFAULT null
 );
 
