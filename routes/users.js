@@ -24,15 +24,15 @@ const endConnection = () => {
 // TODO change to POST when Jad gives us frontend 
 router.get('/register/:username/:password', async function (req, res, next) {
   const { username, password } = req.params;
-  if(!username || !password) return res.send(`Please enter username and password`);
+  if (!username || !password) return res.send(`Please enter username and password`);
   try {
-    if(await isUserExists(username)) {
+    if (await isUserExists(username)) {
       return res.send(`User ${username} already exists!`);
     }
     const hashedPassword = await hashPass(password);
     await query(`INSERT INTO new_table (username, passwordHash) VALUES (?, ?)`, [username, hashedPassword]);
     res.send("Registered");
-  } catch(err) {
+  } catch (err) {
     res.send("Something went wrong.");
   }
 });
@@ -41,7 +41,7 @@ router.get('/register/:username/:password', async function (req, res, next) {
 // TODO change to post when Jad gives us frontend
 router.get('/login/:username/:password', async function (req, res) {
   const { username, password } = req.params;
-  if(!username || !password) return res.send(`Please enter username and password`);
+  if (!username || !password) return res.send(`Please enter username and password`);
   if (!await isUserExists(username)) {
     return res.send("User does not exist!");
   }
@@ -56,6 +56,18 @@ router.get('/login/:username/:password', async function (req, res) {
   }
 });
 
+router.get('/listings/:userId?', async function (req, res) {
+  let userId = req.params.userId;
+  if (!userId) {
+    userId = await findUser(username);
+  }
+  const respon = await query('SELECT * FROM product WHERE seller_id = ?', [userId]);
+  console.log(await respon[0]);
+})
+
+const getCurrentUser = async () => {
+  return -1;
+}
 
 // Checks if the user ID is = -1 and returns false if it is
 const isUserExists = async (username) => {
@@ -67,7 +79,7 @@ const isUserExists = async (username) => {
 const findUser = async (username) => {
   try {
     const response = await query(`SELECT * FROM new_table WHERE username = ?`, [username]);
-    if(response.length == 0) return -1;
+    if (response.length == 0) return -1;
     return response[0].userId;
   } catch (e) {
     return -1;
