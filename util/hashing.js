@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 module.exports = { saltRounds };
 module.exports.checkPass = async (passwordHash, password) => {
-    const result = await bcrypt.compare(password + '', passwordHash);
+    const result = await bcrypt.compare(password, passwordHash);
     return result;
 };
 module.exports.hashPass = (password) => {

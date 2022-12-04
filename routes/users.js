@@ -20,34 +20,36 @@ const endConnection = () => {
   con.end();
 };
 
-// When a request is sent on /register/:username/:password, check if user exists in DB. If doesn't exist, create new user using provided info. Else send an error
-// TODO change to POST when Jad gives us frontend 
-router.get('/register/:username/:password', async function (req, res, next) {
-  const { username, password } = req.params;
-  if (!username || !password) return res.send(`Please enter username and password`);
-  try {
-    if (await isUserExists(username)) {
-      return res.send(`User ${username} already exists!`);
+// When a POST request is sent on /register, check if user exists in DB. If doesn't exist, create new user using provided info. Else send an error
+router.post('/register', async function (req, res) {
+  const { fname, lname, email, username, password, phone, gender, dob } = req.body;
+  if (!fname || !lname || !email || !username || !password || !phone || !gender || !dob) {
+    res.status(401).send("Fill all fields!");
+  } else {
+    try {
+      console.log(username);
+      if (await isUserExists(username)) {
+        return res.send(`User ${username} already exists!`);
+      }
+      const hashedPassword = await hashPass(password);
+      await query(`INSERT INTO site_user (first_name, last_name, email_address, username, password, phone_nb, gender, date_of_birth) VALUES (?,?,?,?,?,?,?,?)`, [fname, lname, email, username, hashedPassword, phone, gender, dob]);
+      res.send("Registered");
+    } catch (err) {
+      res.send("Something went wrong.");
     }
-    const hashedPassword = await hashPass(password);
-    await query(`INSERT INTO new_table (username, passwordHash) VALUES (?, ?)`, [username, hashedPassword]);
-    res.send("Registered");
-  } catch (err) {
-    res.send("Something went wrong.");
   }
 });
 
 // Tries to log the user in using the specified username and password
-// TODO change to post when Jad gives us frontend
-router.get('/login/:username/:password', async function (req, res) {
-  const { username, password } = req.params;
+router.post('/login', async function (req, res) {
+  const { username, password } = req.body;
   if (!username || !password) return res.send(`Please enter username and password`);
   if (!await isUserExists(username)) {
     return res.send("User does not exist!");
   }
   const userId = await findUser(username);
-  const respon = await query(`SELECT passwordHash FROM new_table WHERE userId = ?`, [userId]);
-  const passwordHash = respon[0].passwordHash;
+  const respon = await query(`SELECT password FROM site_user WHERE user_id = ?`, [userId]);
+  const passwordHash = await respon[0].password.trim();
   if (await checkPass(passwordHash, password)) {
     res.send("Password is correct!");
     //TODO generate jwt token here.
@@ -78,9 +80,9 @@ const isUserExists = async (username) => {
 // Searches for the username in the database. If found, return the user Id, else return -1
 const findUser = async (username) => {
   try {
-    const response = await query(`SELECT * FROM new_table WHERE username = ?`, [username]);
+    const response = await query(`SELECT * FROM site_user WHERE username = ?`, [username]);
     if (response.length == 0) return -1;
-    return response[0].userId;
+    return response[0].user_id;
   } catch (e) {
     return -1;
   }
