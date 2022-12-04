@@ -32,7 +32,7 @@ router.post('/register', async function (req, res) {
         return res.send(`User ${username} already exists!`);
       }
       const hashedPassword = await hashPass(password);
-      await query(`INSERT INTO site_user (first_name, last_name, email_address, username, password, phone_nb, gender, date_of_birth) VALUES (?,?,?,?,?,?,?,?)`, [fname, lname, email, username, hashedPassword, phone, gender, dob]);
+      await query(`INSERT INTO site_user (firstName, lastName, email, username, password, phoneNumber, gender, dateOfBirth) VALUES (?,?,?,?,?,?,?,?)`, [fname, lname, email, username, hashedPassword, phone, gender, dob]);
       res.send("Registered");
     } catch (err) {
       res.send("Something went wrong.");
@@ -48,7 +48,7 @@ router.post('/login', async function (req, res) {
     return res.send("User does not exist!");
   }
   const userId = await findUser(username);
-  const respon = await query(`SELECT password FROM site_user WHERE user_id = ?`, [userId]);
+  const respon = await query(`SELECT password FROM site_user WHERE userId = ?`, [userId]);
   const passwordHash = await respon[0].password.trim();
   if (await checkPass(passwordHash, password)) {
     res.send("Password is correct!");
@@ -61,10 +61,13 @@ router.post('/login', async function (req, res) {
 router.get('/listings/:userId?', async function (req, res) {
   let userId = req.params.userId;
   if (!userId) {
-    userId = await findUser(username);
+    userId = await getCurrentUser();
   }
-  const respon = await query('SELECT * FROM product WHERE seller_id = ?', [userId]);
-  console.log(await respon[0]);
+  const respon = await query('SELECT * FROM product WHERE sellerId = ?', [userId]);
+  await respon.forEach(element => {
+    console.log(element);
+  });
+  res.send("done")
 })
 
 const getCurrentUser = async () => {
@@ -82,7 +85,7 @@ const findUser = async (username) => {
   try {
     const response = await query(`SELECT * FROM site_user WHERE username = ?`, [username]);
     if (response.length == 0) return -1;
-    return response[0].user_id;
+    return response[0].userId;
   } catch (e) {
     return -1;
   }
