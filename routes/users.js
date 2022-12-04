@@ -63,9 +63,9 @@ router.get('/listings/:userId?', async function (req, res) {
   if (!userId) {
     userId = await getCurrentUser();
   }
-  const respon = await query('SELECT * FROM product WHERE sellerId = ?', [userId]);
+  const respon = await query('SELECT P.productId, P.categoryId, P.name, P.description, G.imagePath FROM product AS P LEFT JOIN product_gallery AS G ON P.productId = G.productId WHERE P.sellerId = ?', [userId]);
   await respon.forEach(element => {
-    console.log(element);
+    console.log(JSON.stringify(element));
   });
   res.send("done")
 })
