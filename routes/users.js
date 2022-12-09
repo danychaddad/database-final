@@ -2,7 +2,10 @@ const express = require('express');
 const router = express.Router();
 const mysql = require('mysql')
 const util = require('util')
+const jwt = require('jsonwebtoken')
+const dotenv = require('dotenv')
 const { checkPass, hashPass } = require('../util/hashing');
+dotenv.config();
 
 const con = mysql.createConnection({
   host: "localhost",
@@ -42,21 +45,34 @@ router.post('/register', async function (req, res) {
 
 // Tries to log the user in using the specified username and password
 router.post('/login', async function (req, res) {
-  const { username, password } = req.body;
-  if (!username || !password) return res.send(`Please enter username and password`);
-  if (!await isUserExists(username)) {
-    return res.send("User does not exist!");
+  let isTokenValid = false;
+  const token = req.body.token;
+  if (token) {
+    jwt.verify(token, process.env.TOKEN_SECRET, (err) => {
+      if (!err) {
+        isTokenValid = true;  
+        res.send("Logged in!");
+      }
+    })
   }
-  const userId = await findUser(username);
-  const respon = await query(`SELECT password FROM site_user WHERE user_id = ?`, [userId]);
-  const passwordHash = await respon[0].password.trim();
-  if (await checkPass(passwordHash, password)) {
-    res.send("Password is correct!");
-    //TODO generate jwt token here.
-  } else {
-    res.send("Wrong password!")
+  if (!isTokenValid) {
+    const { username, password } = req.body;
+    if (!username || !password) return res.send(`Please enter username and password`);
+    if (!await isUserExists(username)) {
+      return res.send("User does not exist!");
+    }
+    const userId = await findUser(username);
+    const respon = await query(`SELECT password FROM site_user WHERE userId = ?`, [userId]);
+    const passwordHash = await respon[0].password;
+    if (await checkPass(passwordHash, password)) {
+      const token = generateJWT(username);
+      res.json({ token: token});
+    } else {
+      res.send("Wrong password!")
+    }
   }
-});
+}
+);
 
 
 // Checks if the user ID is = -1 and returns false if it is
@@ -70,10 +86,14 @@ const findUser = async (username) => {
   try {
     const response = await query(`SELECT * FROM site_user WHERE username = ?`, [username]);
     if (response.length == 0) return -1;
-    return response[0].user_id;
+    return response[0].userId;
   } catch (e) {
     return -1;
   }
+}
+
+const generateJWT = (username) => {
+  return jwt.sign({ username: username }, process.env.TOKEN_SECRET, { expiresIn: 1800 });
 }
 
 module.exports = router;
