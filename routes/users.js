@@ -48,9 +48,9 @@ router.post('/login', async function (req, res) {
   let isTokenValid = false;
   const token = req.body.token;
   if (token) {
-    jwt.verify(token, process.env.TOKEN_SECRET, (err, user) => {
+    jwt.verify(token, process.env.TOKEN_SECRET, (err) => {
       if (!err) {
-        isTokenValid = true;
+        isTokenValid = true;  
         res.send("Logged in!");
       }
     })
@@ -66,7 +66,7 @@ router.post('/login', async function (req, res) {
     const passwordHash = await respon[0].password;
     if (await checkPass(passwordHash, password)) {
       const token = generateJWT(username);
-      res.send(token);
+      res.json({ token: token});
     } else {
       res.send("Wrong password!")
     }
