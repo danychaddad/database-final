@@ -6,7 +6,7 @@ const logger = require('morgan');
 const bcrypt = require('bcrypt')
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
-const listRouter = require('./routes/list');
+const itemsRouter = require('./routes/items');
 
 const app = express();
 
@@ -24,7 +24,7 @@ app.use(express.urlencoded({
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/list', listRouter)
+app.use('/list', itemsRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
