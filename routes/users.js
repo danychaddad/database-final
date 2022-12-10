@@ -5,14 +5,8 @@ const util = require('util')
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
 const { checkPass, hashPass } = require('../util/hashing');
+const con = require('../util/database')
 dotenv.config();
-
-const con = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "markit"
-});
 
 // call query(q) with q being an SQL query instead of con.query to make it work async, and await result
 const query = util.promisify(con.query).bind(con);
