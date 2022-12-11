@@ -36,4 +36,9 @@ router.post('/new', async function (req, res) {
     res.send("Successfully added item!");
 })
 
+router.put('/update/:id', async function (req, res) {
+    let itemId = req.body;
+    
+})
+
 module.exports = router;
