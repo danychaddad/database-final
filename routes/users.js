@@ -83,6 +83,16 @@ router.get('/listings/:userId?', async function (req, res) {
   res.send(JSON.stringify(await respon));
 })
 
+router.get('/me', async function (req, res) {
+  const token = req.headers.token;
+  const userId = await getCurrentUser(token);
+  if (userId == -1) {
+    return res.send("Not logged in!");
+  }
+  const respon = await query('SELECT userId, username, firstName, lastName, balance, email, displayPicture FROM site_user WHERE userId = ?', [userId]);
+  return res.send(JSON.stringify(await respon));
+})
+
 const getCurrentUser = async (token) => {
   const decode = jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
     if (err)
