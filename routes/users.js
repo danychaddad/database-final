@@ -71,9 +71,12 @@ router.post('/login', async function (req, res) {
 router.get('/listings/:userId?', async function (req, res) {
   let userId = req.params.userId;
   if (!userId) {
+    // TODO refactor header name
     const token = req.headers.token;
     userId = await getCurrentUser(token);
-    console.log(userId);
+    if (userId == -1) {
+      return res.status(401).send("You are not logged in!");
+    }
   }
   const respon = await query('SELECT P.productId AS prodId, P.categoryId AS catId, P.name, P.description, G.imagePath, I.qtyInStock, I.price FROM product_item I, (product AS P LEFT JOIN product_gallery AS G ON P.productId = G.productId) WHERE ((P.sellerId = ?) AND (I.productId = P.productId));', [userId]);
   await respon.forEach(element => {
