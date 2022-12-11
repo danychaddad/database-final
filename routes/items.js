@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const con = require('../util/database');
 const util = require('util');
-
+const { getCurrentUser, generateJWT, findUser, isUserExists } = require('../util/user');
 const query = util.promisify(con.query).bind(con);
 
 // View item specified by id
@@ -34,6 +34,27 @@ router.post('/new', async function (req, res) {
         return res.send("Something went wrong!")
     }
     res.send("Successfully added item!");
+})
+
+router.delete('/:id', async function (req, res) {
+    const itemId = req.params.id;
+    const currentUserId = await getCurrentUser(req.headers.token);
+    let respon;
+    try {
+        respon = await query('SELECT sellerId AS sellerId FROM product WHERE productId = ?', [itemId]);
+    } catch (e) {
+        res.send("Something went wrong!");
+    }
+    if (respon.length == 0) {
+        return res.send(`Item with ID ${itemId} doesn't exist!`);
+    }
+    if (await currentUserId == await respon[0].sellerId) {
+        query('DELETE FROM product_item WHERE productId = ?', [itemId]);
+        query('DELETE FROM product WHERE productId = ?', [itemId]);
+        return res.send("Deleted items!");
+    } else {
+        return res.send("You do not own this item");
+    }
 })
 
 module.exports = router;
