@@ -36,9 +36,40 @@ router.post('/new', async function (req, res) {
     res.send("Successfully added item!");
 })
 
-router.put('/update/:id', async function (req, res) {
-    let itemId = req.body;
-    
-})
+router.route('/update/:id').
+    // Checks if item exists, if it does, continue else send error.
+    all(async function (req, res, next) {
+        res.id = req.params.id;
+        res.info = await getItemInfo(res.id);
+        if (!await res.info) {
+            return res.status(404).send("Item not found!");
+        }
+        next();
+    })
+    // Send item info for jad to enter in form
+    .get(async function (req, res) {
+        res.send(await res.info[0]);
+    })
+    // Recieve updated item info from form
+    .post(async function (req, res) {
+        const { catId, name, desc, stock, price } = req.body;
+        if (!(name && desc && stock && price)) {
+            return res.send("Please fill out all fields!");
+        }
+        // Update qtyInStock and price and set dateUpdated
+        await query('UPDATE product_item SET qtyInStock = ?, price = ?,dateUpdated = now() WHERE productId = ?', [stock, price, res.id])
+        // Update catId, name, desc and set dateUpdated
+        await query('UPDATE product SET categoryId = ?, name = ?, description = ?, dateUpdated = now() WHERE productId = ?', [catId, name, desc, res.id])
+        res.send("Successfully updated")
+    })
+
+// Get item info by ID, returns false if item not found
+const getItemInfo = async (id) => {
+    let respon = await query('SELECT P.categoryId, P.name, P.description, I.qtyInStock, I.price FROM product P LEFT OUTER JOIN product_item I ON P.productId = I.productId WHERE P.productId = ?', [id]);
+    if (respon.length == 0) {
+        return false;
+    }
+    return respon;
+}
 
 module.exports = router;
