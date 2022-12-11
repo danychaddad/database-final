@@ -29,7 +29,7 @@ router.post('/register', async function (req, res) {
         return res.send(`User ${username} already exists!`);
       }
       const hashedPassword = await hashPass(password);
-      await query(`INSERT INTO site_user (first_name, last_name, email_address, username, password, phone_nb, gender, date_of_birth) VALUES (?,?,?,?,?,?,?,?)`, [fname, lname, email, username, hashedPassword, phone, gender, dob]);
+      await query(`INSERT INTO site_user (firstName, lastName, email, username, password, phoneNumber, gender, dateOfBirth) VALUES (?,?,?,?,?,?,?,?)`, [fname, lname, email, username, hashedPassword, phone, gender, dob]);
       res.send("Registered");
     } catch (err) {
       res.send("Something went wrong.");
@@ -44,7 +44,7 @@ router.post('/login', async function (req, res) {
   if (token) {
     jwt.verify(token, process.env.TOKEN_SECRET, (err) => {
       if (!err) {
-        isTokenValid = true;  
+        isTokenValid = true;
         res.send("Logged in!");
       }
     })
@@ -60,7 +60,7 @@ router.post('/login', async function (req, res) {
     const passwordHash = await respon[0].password;
     if (await checkPass(passwordHash, password)) {
       const token = generateJWT(username);
-      res.json({ token: token});
+      res.json({ token: token });
     } else {
       res.send("Wrong password!")
     }
@@ -68,6 +68,29 @@ router.post('/login', async function (req, res) {
 }
 );
 
+router.get('/listings/:userId?', async function (req, res) {
+  let userId = req.params.userId;
+  if (!userId) {
+    // TODO refactor header name
+    const token = req.headers.token;
+    userId = await getCurrentUser(token);
+    if (userId == -1) {
+      return res.status(401).send("You are not logged in!");
+    }
+  }
+  const respon = await query('SELECT P.productId AS prodId, P.categoryId AS catId, P.name, P.description, G.imagePath, I.qtyInStock, I.price FROM product_item I, (product AS P LEFT JOIN product_gallery AS G ON P.productId = G.productId) WHERE ((P.sellerId = ?) AND (I.productId = P.productId));', [userId]);
+  // TODO wait for Jad's answer if we need to change the way it's sent back to frontend
+  res.send(JSON.stringify(await respon));
+})
+
+const getCurrentUser = async (token) => {
+  const decode = jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
+    if (err)
+      return -1;
+    return decoded.username;
+  })
+  return await findUser(decode);
+}
 
 // Checks if the user ID is = -1 and returns false if it is
 const isUserExists = async (username) => {
