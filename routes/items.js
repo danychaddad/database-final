@@ -28,10 +28,12 @@ router.post('/new', async function (req, res) {
     await query('INSERT INTO product (sellerId, categoryId, name, description) VALUES (?,?,?,?);', [sellerId, catId, name, description]);
     let respon = await query('SELECT last_insert_id() AS id');
     let productId = await respon[0].id;
-    await query('INSERT INTO product_item (productId, qtyInStock, price) VALUES (?,?,?)', [productId, stock, price]);
-    setTimeout(() => {
-        res.redirect(`${productId}`);
-    }, 100);
+    try {
+        await query('INSERT INTO product_item (productId, qtyInStock, price) VALUES (?,?,?)', [productId, stock, price]);
+    } catch (e) {
+        return res.send("Something went wrong!")
+    }
+    res.send("Successfully added item!");
 })
 
 module.exports = router;
