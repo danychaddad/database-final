@@ -4,15 +4,6 @@ const con = require('../util/database');
 const util = require('util');
 const query = util.promisify(con.query).bind(con);
 
-router.get('/all', async function (req, res) {
-    const respon = await query('SELECT productCategoryId, parentCategoryId, categoryName FROM product_category WHERE dateDeleted IS null');
-    res.send(await respon);
-})
-
-router.get('/:id', async function (req, res) {
-
-})
-
 router.post('/new', async function (req, res) {
     const { parentCatName, catName } = req.body;
     const parentCatId = await getCatId(parentCatName);
