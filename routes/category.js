@@ -60,11 +60,11 @@ router.post('/delete', async function (req, res) {
 })
 
 let getCatId = async (catName) => {
-    const respon = await query('SELECT productCategoryId FROM product_category WHERE categoryName = ?', [catName]);
+    const respon = await query('SELECT productCategoryId FROM product_category WHERE categoryName = ? AND dateDeleted IS NULL', [catName]);
     if (await respon.length == 0) {
         return null;
     }
-    return respon[0].productCategoryId;
+    return await respon[0].productCategoryId;
 }
 
 module.exports = router;
