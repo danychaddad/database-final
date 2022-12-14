@@ -90,7 +90,7 @@ router.get('/me', async function (req, res) {
     return res.send("Not logged in!");
   }
   const respon = await query('SELECT userId, username, firstName, lastName, balance, email, displayPicture FROM site_user WHERE userId = ?', [userId]);
-  return res.send(JSON.stringify(await respon));
+  return res.send(await respon[0]);
 })
 
 const getCurrentUser = async (token) => {
