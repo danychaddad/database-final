@@ -43,6 +43,21 @@ router.post('/update', async function (req, res) {
     return res.send(`Successfully updated category ${catName}`);
 })
 
+router.post('/delete', async function (req, res) {
+    const catName = req.body.catName;
+    const catId = await getCatId(catName);
+    if (await catId == null) {
+        return res.send("Category does not exist!");
+    }
+    try {
+        await query('UPDATE product_category SET parentCategoryId = null, dateUpdated = now() WHERE parentCategoryId = ?', [catId]);
+        await query('UPDATE product_category SET dateDeleted = now() WHERE productCategoryId = ?', [catId]);
+    } catch (e) {
+        console.log(e);
+        return res.send("Something went wrong!");
+    }
+    return res.send(`Successfully deleted category ${catName} and made its children orphans`);
+})
 
 let getCatId = async (catName) => {
     const respon = await query('SELECT productCategoryId FROM product_category WHERE categoryName = ?', [catName]);
