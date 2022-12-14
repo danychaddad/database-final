@@ -84,6 +84,13 @@ router.get('/listings/:userId?', async function (req, res) {
   // TODO wait for Jad's answer if we need to change the way it's sent back to frontend
   res.send(JSON.stringify(await respon));
 })
-
-
+router.get('/me', async function (req, res) {
+  const token = req.headers.token;
+  const userId = await getCurrentUser(token);
+  if (userId == -1) {
+    return res.send("Not logged in!");
+  }
+  const respon = await query('SELECT userId, username, firstName, lastName, balance, email, displayPicture FROM site_user WHERE userId = ?', [userId]);
+  return res.send(await respon[0]);
+})
 module.exports = router;
