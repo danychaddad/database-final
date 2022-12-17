@@ -42,7 +42,7 @@ router.post('/register', async function (req, res) {
 // Tries to log the user in using the specified username and password
 router.post('/login', async function (req, res) {
   let isTokenValid = false;
-  const token = req.body.token;
+  const token = req.headers.token;
   if (token) {
     jwt.verify(token, process.env.TOKEN_SECRET, (err) => {
       if (!err) {
@@ -61,7 +61,7 @@ router.post('/login', async function (req, res) {
     const respon = await query(`SELECT password FROM site_user WHERE userId = ?`, [userId]);
     const passwordHash = await respon[0].password;
     if (await checkPass(passwordHash, password)) {
-      const token = generateJWT(username);
+      const token = generateJWT(userId);
       res.json({ token: token });
     } else {
       res.send("Wrong password!")
