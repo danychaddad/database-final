@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
 const { checkPass, hashPass } = require('../util/hashing');
 const con = require('../util/database')
-const { getCurrentUser, generateJWT, findUser , isUserExists } = require('../util/user');
+const { getCurrentUser, generateJWT, findUser, isUserExists } = require('../util/user');
 
 dotenv.config();
 
@@ -69,6 +69,38 @@ router.post('/login', async function (req, res) {
   }
 }
 );
+
+router.route('/update')
+  .all(async function (req, res, next) {
+    const token = req.headers.token;
+    res.userId = await getCurrentUser(token);
+    console.log(await res.userId);
+    if (await res.userId == -1) {
+      return res.send("Not logged in!");
+    }
+    next();
+  })
+  .get(async function (req, res) {
+    const respon = await query('SELECT userId, username, firstName, lastName, balance, email, displayPicture FROM site_user WHERE userId = ?', [res.userId]);
+    return res.send(await respon[0]);
+  })
+  .post(async function (req, res) {
+    const { username, email, phone, fname, lname, displayPicture, dob, gender } = req.body;
+    if (!(username && email && phone && fname && lname && dob && gender)) {
+      return res.send("Please fill out all fields!");
+    }
+    try {
+      const respon = await query("SELECT username FROM site_user WHERE username = ? AND username NOT IN (SELECT username FROM site_user WHERE userId = ?)", [username, res.userId]);
+      if (await respon.length != 0) {
+        return res.send("Username already in database!");
+      }
+      await query("UPDATE site_user SET username = ?, email = ?, phoneNumber = ?, firstName = ?, lastName = ?, dateOfBirth = ?, gender = ? WHERE userId = ?", [username, email, phone, fname, lname, dob, gender, res.userId]);
+    } catch (e) {
+      return res.send("Something went wrong!");
+    }
+    res.send("Emmak");
+  });
+
 
 router.get('/listings/:userId?', async function (req, res) {
   let userId = req.params.userId;
