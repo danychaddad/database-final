@@ -18,9 +18,9 @@ const getCurrentUser = async (token) => {
     const decode = jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
         if (err)
             return -1;
-        return decoded.username;
+        return decoded.userId;
     })
-    return await findUser(decode);
+    return decode;
 }
 
 // Checks if the user ID is = -1 and returns false if it is
@@ -29,9 +29,8 @@ const isUserExists = async (username) => {
     return userId != -1;
 }
 
-
-const generateJWT = (username) => {
-    return jwt.sign({ username: username }, process.env.TOKEN_SECRET, { expiresIn: 1800 });
+const generateJWT = (userId) => {
+    return jwt.sign({ userId: userId }, process.env.TOKEN_SECRET, { expiresIn: 1800 });
 }
 
 module.exports = {
