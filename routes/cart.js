@@ -128,7 +128,7 @@ router.delete('/:itemId', async function (req, res) {
 // Checkout cart and make an order for the items in the cart using createOrder function
 router.post('/checkout', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
-    if (currentUserId) {
+    if (currentUserId != -1) {
         const response = await createOrder(currentUserId);
         if (response) {
             res.send("Order created!");
