@@ -25,7 +25,7 @@ router.get('/', async function (req, res) {
     let userId = await getCurrentUser(req.headers.token);
     if (userId == -1)
         return res.send("You are not logged in!");
-    const response = await query('SELECT A.phoneNumber, A.region, A.city, A.street, A.building, A.floor, A.apartment, A.description FROM ADDRESS A, SITE_USER U WHERE A.userId = U.userId AND A.userId = ? AND A.dateDeleted IS NULL', [userId])
+    const response = await query('SELECT A.addressId, A.region, A.city, A.street, A.building, A.floor, A.description, A.phoneNumber, A.apartment, A.dateCreated, A.dateUpdated FROM ADDRESS A, SITE_USER U WHERE A.userId = U.userId AND A.userId = ? AND A.dateDeleted IS NULL', [userId])
     if (response.length == 0) {
         res.send("No addresses found!").end();
     } else {
