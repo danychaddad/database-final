@@ -76,7 +76,7 @@ router.post('/:itemId', async function (req, res) {
 // Update item in cart
 router.put('/:itemId', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
-    if (currentUserId) {
+    if (currentUserId != -1) {
         const itemId = req.params.itemId;
         const quantity = req.body.quantity;
         if (itemId && quantity) {
@@ -102,7 +102,7 @@ router.put('/:itemId', async function (req, res) {
 // Delete item from cart
 router.delete('/:itemId', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
-    if (currentUserId) {
+    if (currentUserId != -1) {
         const itemId = req.params.itemId;
         if (itemId) {
             const item = await findItem(itemId);
