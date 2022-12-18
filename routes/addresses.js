@@ -10,10 +10,10 @@ const query = util.promisify(con.query).bind(con);
 router.post('/new', async function (req, res) {
     let userId = await getCurrentUser(req.headers.token);
     if (userId == -1)
-        return res.send("You are not logged in!");
+        return res.status(400).send("You are not logged in!");
     let { phoneNumber, region, city, street, building, floor, apartment, description } = req.body;
     if (!(phoneNumber && region && city && street && building && floor && apartment)) {
-        return res.send("Please fill out all required fields!");
+        return res.status(400).send("Please fill out all required fields!");
     }
     await query('INSERT INTO ADDRESS (userId, phoneNumber, region, city, street, building, floor, apartment, description) VALUES (?,?,?,?,?,?,?,?,?);', [userId, phoneNumber, region, city, street, building, floor, apartment, description]);
     res.send("Successfully added address!");
@@ -24,10 +24,10 @@ router.post('/new', async function (req, res) {
 router.get('/', async function (req, res) {
     let userId = await getCurrentUser(req.headers.token);
     if (userId == -1)
-        return res.send("You are not logged in!");
+        return res.status(400).send("You are not logged in!");
     const response = await query('SELECT A.addressId, A.region, A.city, A.street, A.building, A.floor, A.description, A.phoneNumber, A.apartment, A.dateCreated, A.dateUpdated FROM ADDRESS A, SITE_USER U WHERE A.userId = U.userId AND A.userId = ? AND A.dateDeleted IS NULL', [userId])
     if (response.length == 0) {
-        res.send("No addresses found!").end();
+        res.status(400).send("No addresses found!").end();
     } else {
         res.send(response);
     }
@@ -38,11 +38,11 @@ router.route('/:id')
     .get(async function (req, res) {
         let userId = await getCurrentUser(req.headers.token);
         if (userId == -1)
-            return res.send("You are not logged in!");
+            return res.status(400).send("You are not logged in!");
         const addressId = req.params.id;
         const response = await query('SELECT A.phoneNumber, A.region, A.city, A.street, A.building, A.floor, A.apartment, A.description FROM ADDRESS A, SITE_USER U WHERE A.userId = U.userId AND A.userId = ? AND A.addressId = ? AND A.dateDeleted IS NULL;', [userId, addressId]);
         if (response.length == 0) {
-            res.send("Address doesn't exist!").end();
+            res.status(400).send("Address doesn't exist!").end();
         } else {
             res.send(response[0]);
         }
@@ -52,11 +52,11 @@ router.route('/:id')
         //Check if user is logged in, and if the address exists in the first place
         let userId = await getCurrentUser(req.headers.token);
         if (userId == -1)
-            return res.send("You are not logged in!");
+            return res.status(400).send("You are not logged in!");
         const addressId = req.params.id;
         let response = await query('SELECT A.phoneNumber, A.region, A.city, A.street, A.building, A.floor, A.apartment, A.description FROM ADDRESS A, SITE_USER U WHERE A.userId = U.userId AND A.userId = ? AND A.addressId = ? AND A.dateDeleted IS NULL;', [userId, addressId]);
         if (response.length == 0) {
-            res.send("Address doesn't exist!").end();
+            res.status(400).send("Address doesn't exist!").end();
         }
         //Take parameters from request body, if they are not specified, take the old values
         let { phoneNumber, region, city, street, building, floor, apartment, description } = req.body;
@@ -90,11 +90,11 @@ router.route('/:id')
     .delete(async function (req, res) {
         let userId = await getCurrentUser(req.headers.token);
         if (userId == -1)
-            return res.send("You are not logged in!");
+            return res.status(400).send("You are not logged in!");
         const addressId = req.params.id;
         const response = await query('UPDATE ADDRESS SET dateDeleted = NOW() WHERE userId = ? AND addressId = ? AND dateDeleted IS NULL', [userId, addressId]);
         if (response.affectedRows == 0) {
-            return res.send("Address doesn't exist!");
+            return res.status(400).send("Address doesn't exist!");
         } else {
             return res.send("Address deleted successfully!");
         }

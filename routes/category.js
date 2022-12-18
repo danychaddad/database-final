@@ -59,6 +59,16 @@ router.post('/delete', async function (req, res) {
     return res.send(`Successfully deleted category ${catName} and made its children orphans`);
 })
 
+router.get('/', async function(req, res) {
+    try {
+        const response = await query('SELECT * FROM product_category WHERE dateDeleted IS NULL');
+        return res.json(response);
+    } catch (e) {
+        console.log(e);
+        return res.send("Something went wrong!");
+    }
+})
+
 let getCatId = async (catName) => {
     const respon = await query('SELECT productCategoryId FROM product_category WHERE categoryName = ? AND dateDeleted IS NULL', [catName]);
     if (await respon.length == 0) {

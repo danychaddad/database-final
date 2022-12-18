@@ -109,7 +109,7 @@ CREATE TABLE `PRODUCT_ITEM` (
 CREATE TABLE `PRODUCT` (
   `productId` int PRIMARY KEY AUTO_INCREMENT,
   `sellerId` int,
-  `categoryId` int,
+  `categoryId` int DEFAULT 1,
   `name` varchar(255) NOT NULL,
   `description` varchar(255),
   `dateCreated` datetime NOT NULL DEFAULT NOW(),
@@ -154,6 +154,7 @@ CREATE TABLE `CREDIT_UPDATE` (
   `dateCreated` datetime NOT NULL DEFAULT NOW(),
   `dateDeleted` datetime DEFAULT null
 );
+INSERT INTO `PRODUCT_CATEGORY` (`categoryName`) VALUES ('Uncategorized');
 
 ALTER TABLE `ADDRESS` ADD FOREIGN KEY (`userId`) REFERENCES `SITE_USER` (`userId`);
 
