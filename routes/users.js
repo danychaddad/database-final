@@ -26,14 +26,18 @@ router.post('/register', async function (req, res) {
     res.status(401).send("Fill all fields!");
   } else {
     try {
-      console.log(username);
       if (await isUserExists(username)) {
         return res.send(`User ${username} already exists!`);
       }
       const hashedPassword = await hashPass(password);
-      await query(`INSERT INTO site_user (firstName, lastName, email, username, password, phoneNumber, gender, dateOfBirth) VALUES (?,?,?,?,?,?,?,?)`, [fname, lname, email, username, hashedPassword, phone, gender, dob]);
-      res.send("Registered");
+
+      //insert and get userId
+      const row = await query(`INSERT INTO site_user (firstName, lastName, email, username, password, phoneNumber, gender, dateOfBirth) VALUES (?,?,?,?,?,?,?,?)`, [fname, lname, email, username, hashedPassword, phone, gender, dob]);
+      userId = row.insertId;
+      const token = generateJWT(userId);
+      res.json({ token: token });
     } catch (err) {
+      console.log(err);
       res.send("Something went wrong.");
     }
   }
