@@ -44,9 +44,8 @@ router.delete('/', async function (req, res) {
     }
 });
 
-
 // Add item to cart
-router.post('/:itemId', async function (req, res) {
+router.post('/item/:itemId', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId != -1) {
         const itemId = req.params.itemId;
@@ -55,8 +54,8 @@ router.post('/:itemId', async function (req, res) {
             quantity = 1;
         if (itemId && quantity) {
             const item = await findItem(itemId);
-            if (item.length == 0) {
-                res.send("Item does not exist!");
+            if (item == undefined) {
+                return res.send("Item does not exist!");
             } else {
                 const response = await addToCart(currentUserId, itemId, quantity);
                 if (response) {
@@ -74,7 +73,7 @@ router.post('/:itemId', async function (req, res) {
 });
 
 // Update item in cart
-router.put('/:itemId', async function (req, res) {
+router.put('/item/:itemId', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId != -1) {
         const itemId = req.params.itemId;
@@ -100,7 +99,7 @@ router.put('/:itemId', async function (req, res) {
 });
 
 // Delete item from cart
-router.delete('/:itemId', async function (req, res) {
+router.delete('/item/:itemId', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId != -1) {
         const itemId = req.params.itemId;
@@ -123,7 +122,6 @@ router.delete('/:itemId', async function (req, res) {
         res.send("You are not logged in!");
     }
 });
-
 
 // Checkout cart and make an order for the items in the cart using createOrder function
 router.post('/checkout', async function (req, res) {
