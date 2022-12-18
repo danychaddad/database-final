@@ -9,6 +9,7 @@ const usersRouter = require('./routes/users');
 const itemsRouter = require('./routes/items');
 const catRouter = require('./routes/category');
 const cartRouter = require('./routes/cart');
+const addressRouter = require('./routes/addresses');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/users', usersRouter);
 app.use('/items', itemsRouter);
 app.use('/category', catRouter);
 app.use('/cart', cartRouter);
+app.use('/address', addressRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
