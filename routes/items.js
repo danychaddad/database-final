@@ -10,9 +10,9 @@ router.get('/:id', async function (req, res) {
     const itemId = req.params.id;
     const respon = await query('SELECT P.sellerId, P.name, P.description, I.price, I.qtyInStock FROM product P, product_item I WHERE P.productId = I.productId AND P.productId = ?', [itemId])
     if (await respon.length == 0) {
-        res.send("No such item").end();
+        return res.send("No such item");
     } else {
-        res.send(respon[0]);
+        return res.send(respon[0]);
     }
 })
 
