@@ -15,7 +15,7 @@ const findCartId = async (userId) => {
     }
 }
 
-// create a new cart
+// Create a new cart
 const createCart = async (userId) => {
     try {
         const response = await query('INSERT INTO shopping_cart (userId) VALUES (?)', [userId]);
