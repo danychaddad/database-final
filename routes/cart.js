@@ -32,7 +32,7 @@ router.delete('/', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId != -1) {
         let response = await getCartItems(currentUserId);
-        if (response.length == 0) {
+        if (response.length == []) {
             res.send("Your cart is already empty!");
         } else {
             await clearCart(currentUserId);
