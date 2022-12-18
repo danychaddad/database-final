@@ -48,7 +48,7 @@ router.delete('/', async function (req, res) {
 // Add item to cart
 router.post('/:itemId', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
-    if (currentUserId) {
+    if (currentUserId != -1) {
         const itemId = req.params.itemId;
         let quantity = req.body.quantity;
         if (!quantity)

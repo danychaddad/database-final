@@ -19,7 +19,7 @@ const findCartId = async (userId) => {
 const createCart = async (userId) => {
     try {
         const response = await query('INSERT INTO shopping_cart (userId) VALUES (?)', [userId]);
-        return response.insertId;
+        return await response.insertId;
     } catch (e) {
         return -1;
     }
@@ -44,11 +44,11 @@ const clearCart = async (userId) => {
 // Add item to cart
 const addToCart = async (userId, itemId, qty) => {
     try {
-        const cartId = await findCartId(userId);
-        if (cartId == -1) {
-            cartId = createCart(userId);
+        let cartId = await findCartId(userId);
+        if (await cartId == -1) {
+            cartId = await createCart(userId);
         }
-        await query(`INSERT INTO SHOPPING_CART_ITEM (shoppingCartId, productItemId, qty) VALUES (?, ?, ?)`, [cartId, itemId, qty]);
+        await query(`INSERT INTO SHOPPING_CART_ITEM (shoppingCartId, productItemId, qty) VALUES (?, ?, ?)`, [await cartId, itemId, qty]);
         return true;
     } catch (e) {
         console.log(e);
