@@ -7,6 +7,7 @@ const query = util.promisify(con.query).bind(con);
 const { findCartId, createCart, clearCart, addToCart, updateCartItem, getCartItems } = require('../util/cartUtil');
 const { findItem } = require('../util/itemUtil');
 const { clear } = require('console');
+const { createOrder } = require('../util/orderUtil');
 
 // View cart items if user is logged in, and if it doesnt exist, create one, then send the cart items
 router.get('/', async function (req, res) {
@@ -124,6 +125,19 @@ router.delete('/:itemId', async function (req, res) {
 });
 
 
-
+// Checkout cart and make an order for the items in the cart using createOrder function
+router.post('/checkout', async function (req, res) {
+    const currentUserId = await getCurrentUser(req.headers.token);
+    if (currentUserId) {
+        const response = await createOrder(currentUserId);
+        if (response) {
+            res.send("Order created!");
+        } else {
+            res.send("Something Went Wrong!");
+        }
+    } else {
+        res.send("You are not logged in!");
+    }
+});
 
 module.exports = router;
