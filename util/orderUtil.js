@@ -31,8 +31,8 @@ const createOrder = async (userId, addressId, cartId) => {
         const cartItems = await getCartItems(userId);
         // Make sure that the user has enough money to buy the items in the cart
         const total = getCartTotal(userId);
-        const user = await getCurrentUser(userId);
-        if (user[0].balance < total) {
+        const userBalance = await query('SELECT balance FROM SITE_USER WHERE userId = ?', [userId]);
+        if (userBalance[0].balance < total) {
             return false;
         }
         // Make sure that there are enough items in stock 
