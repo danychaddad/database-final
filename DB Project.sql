@@ -119,7 +119,7 @@ CREATE TABLE `PRODUCT` (
 
 CREATE TABLE `PRODUCT_CATEGORY` (
   `productCategoryId` int PRIMARY KEY AUTO_INCREMENT,
-  `parentCategoryId` int UNIQUE,
+  `parentCategoryId` int DEFAULT NULL,
   `categoryName` varchar(255) UNIQUE NOT NULL,
   `dateCreated` datetime NOT NULL DEFAULT NOW(),
   `dateUpdated` datetime DEFAULT null,
