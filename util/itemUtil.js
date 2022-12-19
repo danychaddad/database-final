@@ -12,11 +12,10 @@ const findItem = async (itemId) => {
     }
 }
 
-const findProductByItemId = async (itemId) => {
+const findProductByItemId = async (productItemId) => {
     try {
-        const productId = await findItem(itemId).productId;
-        const response = await query(`SELECT productId, sellerId, categoryId, name, description FROM PRODUCT WHERE productItemId = ? AND dateDeleted IS NULL`, [productId]);
-        return response[0].productId;
+        const response = await query(`SELECT productId, sellerId, categoryId, name, description, price FROM PRODUCT_ITEM_WITH_DETAILS WHERE productItemId = ? AND dateDeleted IS NULL`, [productItemId]);
+        return response[0];
     } catch (e) {
         console.log(e);
         return [];

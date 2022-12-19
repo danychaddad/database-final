@@ -41,6 +41,22 @@ router.delete('/', async function (req, res) {
 });
 
 
+// Checkout cart and make an order for the items in the cart using createOrder function
+router.post('/checkout', async function (req, res) {
+    const addressId = req.params.addressId;
+    const currentUserId = await getCurrentUser(req.headers.token);
+    if (currentUserId) {
+        try {
+            const orderId = await createOrder(currentUserId, addressId);
+            return res.send({ orderId });
+        } catch (err) {
+            res.status(400).send(err.message);
+        }
+    } else {
+        res.status(400).send("You are not logged in!");
+    }
+});
+
 // Add item to cart
 router.post('/:itemId', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
@@ -117,27 +133,6 @@ router.delete('/:itemId', async function (req, res) {
         }
     } else {
         res.send("You are not logged in!");
-    }
-});
-
-
-// Checkout cart and make an order for the items in the cart using createOrder function
-router.post('/checkout', async function (req, res) {
-    const itemId = req.params.addressId;
-    const currentUserId = await getCurrentUser(req.headers.token);
-    if (currentUserId) {
-        try {
-            const response = await createOrder(currentUserId, addressId);
-            if (response) {
-                res.send("Order created!");
-            } else {
-                res.status(400).send("Something Went Wrong!");
-            }
-        } catch (err) {
-            res.status(400).send(err.message);
-        }
-    } else {
-        res.status(400).send("You are not logged in!");
     }
 });
 
