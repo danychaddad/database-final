@@ -123,16 +123,21 @@ router.delete('/:itemId', async function (req, res) {
 
 // Checkout cart and make an order for the items in the cart using createOrder function
 router.post('/checkout', async function (req, res) {
+    const itemId = req.params.addressId;
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId) {
-        const response = await createOrder(currentUserId);
-        if (response) {
-            res.send("Order created!");
-        } else {
-            res.send("Something Went Wrong!");
+        try {
+            const response = await createOrder(currentUserId, addressId);
+            if (response) {
+                res.send("Order created!");
+            } else {
+                res.status(400).send("Something Went Wrong!");
+            }
+        } catch (err) {
+            res.status(400).send(err.message);
         }
     } else {
-        res.send("You are not logged in!");
+        res.status(400).send("You are not logged in!");
     }
 });
 
