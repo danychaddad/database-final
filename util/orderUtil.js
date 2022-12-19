@@ -52,11 +52,11 @@ const createOrder = async (userId, addressId, cartId) => {
                 
         for (let i = 0; i < cartItems.length; i++) {
             const item = cartItems[i];
-            const product = await findProductByItem(item.productItemId);
+            const product = await findProductByItemId(item.productItemId);
             const itemPrice = item.qty * product.price;
             // UPDATE the seller's balance and create the order_item entity
             await query('UPDATE SITE_USER SET balance = balance + ? WHERE userId = ?', [itemPrice, product.sellerId]);
-            await query(`INSERT INTO order_item (productItemId, shopOrderId, qty, totalPrice, senderId, receiverId) VALUES (?, ?, ?, ?, ?, ?)`, [item.productItemId, orderId, item.qty, item.totalPrice, userId, product.sellerId]);
+            await query(`INSERT INTO order_item (productItemId, shopOrderId, qty, totalPrice) VALUES (?, ?, ?, ?)`, [item.productItemId, orderId, item.qty, itemPrice]);
         }
         await clearCart(userId);
         return orderId;
