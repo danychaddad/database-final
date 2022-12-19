@@ -130,7 +130,7 @@ router.post('/checkout', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId != -1) {
         const response = await createOrder(currentUserId);
-        if (response) {
+        if (response != -1) {
             res.send("Order created!");
         } else {
             res.send("Something Went Wrong!");
