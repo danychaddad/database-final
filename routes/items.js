@@ -8,7 +8,16 @@ const query = util.promisify(con.query).bind(con);
 // View item specified by id
 router.get('/', async function(req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
-    if(!currentUserId) return res.status(400).send("You are not logged in!");
+    if(!currentUserId) {
+        try {
+            response = await query("SELECT * FROM product_item_with_details_and_image_path ORDER BY product_item_with_details_and_image_path.productItemId DESC LIMIT 20");
+            res.send(response);
+            return;
+        } catch (err) {
+            res.status(400).send("Error: " + err.message);
+            return;
+        }
+    }
     try {
         response = await query("SELECT * FROM product_item_with_details_and_image_path WHERE product_item_with_details_and_image_path.sellerId = ?;", [currentUserId]);
         res.send(response);
