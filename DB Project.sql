@@ -147,3 +147,5 @@ ALTER TABLE `PRODUCT` ADD FOREIGN KEY (`categoryId`) REFERENCES `PRODUCT_CATEGOR
 ALTER TABLE `PRODUCT_CATEGORY` ADD FOREIGN KEY (`parentCategoryId`) REFERENCES `PRODUCT_CATEGORY` (`productCategoryId`);
 
 ALTER TABLE `PRODUCT_GALLERY` ADD FOREIGN KEY (`productId`) REFERENCES `PRODUCT` (`productId`);
+
+CREATE VIEW product_item_with_details AS SELECT product_item.productId, product_item.productItemId, product_item.qtyInStock, product_item.price, product_item.dateCreated, product_item.dateUpdated, product_item.dateDeleted, product.name, product.sellerId, product.categoryId, product.description  FROM product_item, product WHERE product_item.productId = product.productId;
