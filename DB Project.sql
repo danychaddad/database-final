@@ -16,9 +16,9 @@ CREATE TABLE `SITE_USER` (
   `phoneNumber` int(8) UNIQUE NOT NULL,
   `firstName` varchar(20) NOT NULL,
   `lastName` varchar(20) NOT NULL,
-  `balance` decimal(8,2) NOT NULL DEFAULT 0 COMMENT 'Derived from credit_update and order_item',
+  `balance` decimal(8,2) NOT NULL DEFAULT 0,
   `dateOfBirth` date NOT NULL,
-  `gender` char(1) NOT NULL DEFAULT "o" COMMENT 'Taken for analytics purposes',
+  `gender` char(1) NOT NULL DEFAULT "o",
   `dateCreated` datetime NOT NULL DEFAULT NOW(),
   `dateUpdated` datetime DEFAULT null,
   `dateDeleted` datetime DEFAULT null
