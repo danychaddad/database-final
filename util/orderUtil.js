@@ -33,14 +33,14 @@ const createOrder = async (userId, addressId, cartId) => {
         const total = getCartTotal(userId);
         const userBalance = await query('SELECT balance FROM SITE_USER WHERE userId = ?', [userId]);
         if (userBalance[0].balance < total) {
-            return false;
+            return -1;
         }
         // Make sure that there are enough items in stock 
         for (let i = 0; i < cartItems.length; i++) {
             const item = cartItems[i];
             const productItem = await findItem(item.productItemId);
             if (productItem[0].qtyInStock < item.qty) {
-                return false;
+                return -1;
             }
         }
         // Create the shop_order entity first, then create the order_item entities
