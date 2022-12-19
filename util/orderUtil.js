@@ -42,6 +42,7 @@ const createOrder = async (userId, addressId) => {
                 throw new Error("Not enough items in stock");
             }
         }
+        console.log(addressId, `in create order`);
         // Create the shop_order entity first, then create the order_item entities
         const response = await query('INSERT INTO shop_order (userId, shippingAddress) VALUES (?,?)', [userId, addressId]);
         const orderId = response.insertId;

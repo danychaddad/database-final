@@ -84,11 +84,11 @@ router.route('/update')
     next();
   })
   .get(async function (req, res) {
-    const respon = await query('SELECT userId, username, firstName, lastName, balance, email, displayPicture FROM site_user WHERE userId = ?', [res.userId]);
+    const respon = await query('SELECT userId, username, firstName, lastName, balance, email FROM site_user WHERE userId = ?', [res.userId]);
     return res.send(await respon[0]);
   })
   .post(async function (req, res) {
-    const { username, email, phone, fname, lname, displayPicture, dob, gender } = req.body;
+    const { username, email, phone, fname, lname, dob, gender } = req.body;
     if (!(username && email && phone && fname && lname && dob && gender)) {
       return res.status(400).send("Please fill out all fields!");
     }
@@ -126,7 +126,7 @@ router.get('/me', async function (req, res) {
   if (userId == -1) {
     return res.status(400).send("Not logged in!");
   }
-  const respon = await query('SELECT userId, username, firstName, lastName, balance, email, displayPicture FROM site_user WHERE userId = ?', [userId]);
+  const respon = await query('SELECT userId, username, firstName, lastName, balance, email FROM site_user WHERE userId = ?', [userId]);
   return res.send(await respon[0]);
 })
 

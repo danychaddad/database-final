@@ -43,7 +43,7 @@ router.delete('/', async function (req, res) {
 
 // Checkout cart and make an order for the items in the cart using createOrder function
 router.post('/checkout', async function (req, res) {
-    const addressId = req.params.addressId;
+    const addressId = req.body.addressId;
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId) {
         try {
@@ -112,27 +112,58 @@ router.put('/:itemId', async function (req, res) {
 });
 
 // Delete item from cart
-router.delete('/:itemId', async function (req, res) {
+router.delete('/:shoppingCartItemId', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId != -1) {
-        const itemId = req.params.itemId;
+        const itemId = req.params.shoppingCartItemId;
         if (itemId) {
-            const item = await findItem(itemId);
-            if (item.length == 0) {
-                res.send("Item does not exist!");
-            } else {
-                const response = await removeFromCart(currentUserId, itemId);
-                if (response) {
-                    res.send("Item deleted from cart!");
-                } else {
-                    res.send("Item could not be deleted from cart!");
-                }
+            
+            try {
+                const response = await query("DELETE FROM shopping_cart_item WHERE shoppingCartItemId = ?", [itemId]);
+                res.send("Item deleted from cart!");
+            } catch (err) {
+                res.status(400).send(err.message);
             }
         } else {
-            res.send("Please enter an item id!");
+            res.status(400).send("Please enter an item id!");
         }
     } else {
-        res.send("You are not logged in!");
+        res.status(400).send("You are not logged in!");
+    }
+});
+
+
+router.get('/order-history', async function (req, res) {
+    const currentUserId = await getCurrentUser(req.headers.token);
+    if (currentUserId != -1) {
+        const orders = await query("SELECT * FROM shop_order WHERE userId = ?", [currentUserId]);
+        for(const order of orders) {
+            order.items = await query("SELECT * FROM order_item, product_item_with_details_and_image_path A WHERE order_item.shopOrderId = ? AND A.productItemId = order_item.productItemId", [order.shopOrderId]);
+            console.log(order.items);
+            if(order.items.length == 0) {
+                //Remove order if it has no items
+            }
+        }
+        res.send(orders);
+    } else {
+        res.status(400).send("You are not logged in!");
+    }
+});
+
+router.get('/sales-history', async function (req, res) {
+    const currentUserId = await getCurrentUser(req.headers.token);
+    if (currentUserId != -1) {
+        const orders = await query("SELECT * FROM shop_order, address WHERE address.addressId = shop_order.shippingAddress AND shopOrderId IN (SELECT DISTINCT shopOrderId FROM order_item, product_item_with_details A WHERE A.sellerId = ? AND A.productItemId = order_item.productItemId)", [currentUserId]);
+        for(const order of orders) {
+            order.items = await query("SELECT * FROM order_item, product_item_with_details_and_image_path P WHERE order_item.shopOrderId = ? AND P.productItemId = order_item.productItemId", [order.shopOrderId]);
+            console.log(order.items);
+            if(order.items.length == 0) {
+                //Remove order if it has no items
+            }
+        }
+        res.send(orders);
+    } else {
+        res.status(400).send("You are not logged in!");
     }
 });
 
