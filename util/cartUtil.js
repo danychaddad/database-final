@@ -6,6 +6,7 @@ const query = util.promisify(con.query).bind(con);
 const findCartId = async (userId) => {
     try {
         const response = await query(`SELECT shoppingCartId FROM SHOPPING_CART WHERE userId = ? AND dateDeleted IS NULL`, [userId]);
+        console.log(response);
         if (response.length == 0) {
             return -1;
         }
@@ -44,10 +45,11 @@ const clearCart = async (userId) => {
 // Add item to cart
 const addToCart = async (userId, itemId, qty) => {
     try {
-        const cartId = await findCartId(userId);
+        let cartId = await findCartId(userId);
         if (cartId == -1) {
-            cartId = createCart(userId);
+            cartId = await createCart(userId);
         }
+        console.log(cartId);
         await query(`INSERT INTO SHOPPING_CART_ITEM (shoppingCartId, productItemId, qty) VALUES (?, ?, ?)`, [cartId, itemId, qty]);
         return true;
     } catch (e) {
@@ -85,13 +87,27 @@ const removeFromCart = async (userId, itemId) => {
 }
 
 // Get all items in cart
-const getCartItems = async (userId) => {
+const getCartItemsByUserId = async (userId) => {
     try {
         const cartId = await findCartId(userId);
         if (cartId == -1) {
             return false;
         }
-        const response = await query(`SELECT productItemId, qty FROM SHOPPING_CART_ITEM WHERE shoppingCartId = ? AND dateDeleted IS NULL`, [cartId]);
+        const response = await query(`SELECT product_gallery.image_path, overall.* FROM (SELECT productId, MIN(imagePath) as image_path FROM product_gallery WHERE dateDeleted IS NULL GROUP BY productId) product_gallery, (
+            SELECT product_item_with_details.*, shopping_cart_item.shoppingCartId, shopping_cart_item.qty, shopping_cart_item.shoppingCartItemId FROM shopping_cart_item, product_item_with_details WHERE 
+            shopping_cart_item.productItemId = product_item_with_details.productItemId AND product_item_with_details.dateDeleted IS NULL AND shopping_cart_item.shoppingCartId = ?)
+            overall WHERE overall.productId = product_gallery.productId;`, [cartId]);
+        return response;
+    } catch (e) {
+        return false;
+    }
+}
+const getCartItemsById = async (cartId) => {
+    try {
+        const response = await query(`SELECT product_gallery.image_path, overall.* FROM (SELECT productId, MIN(imagePath) as image_path FROM product_gallery WHERE dateDeleted IS NULL GROUP BY productId) product_gallery, (
+            SELECT product_item_with_details.*, shopping_cart_item.shoppingCartId, shopping_cart_item.qty, shopping_cart_item.shoppingCartItemId FROM shopping_cart_item, product_item_with_details WHERE 
+            shopping_cart_item.productItemId = product_item_with_details.productItemId AND product_item_with_details.dateDeleted IS NULL AND shopping_cart_item.shoppingCartId = ?)
+            overall WHERE overall.productId = product_gallery.productId;`, [cartId]);
         return response;
     } catch (e) {
         return false;
@@ -119,6 +135,7 @@ module.exports = {
     createCart,
     updateCartItem,
     removeFromCart,
-    getCartItems,
+    getCartItemsByUserId,
+    getCartItemsById,
     getCartTotal
 }

@@ -10,7 +10,7 @@ router.get('/', async function(req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
     if(!currentUserId) return res.status(400).send("You are not logged in!");
     try {
-        response = await query("SELECT product_item_with_details.*, product_gallery.image_path FROM product_item_with_details JOIN (SELECT productId, MIN(imagePath) as image_path FROM product_gallery WHERE dateDeleted IS NULL GROUP BY productId) product_gallery  WHERE product_item_with_details.productId = product_gallery.productId AND product_item_with_details.dateDeleted IS NULL AND product_item_with_details.sellerId = ?;", [currentUserId]);
+        response = await query("SELECT * FROM product_item_with_details_and_image_path WHERE product_item_with_details_and_image_path.sellerId = ?;", [currentUserId]);
         res.send(response);
     } catch (err) {
         res.status(400).send("Error: " + err.message);
@@ -46,11 +46,13 @@ router.get('/products', async function(req, res) {
 });
 router.get('/:id', async function (req, res) {
     const itemId = req.params.id;
-    const respon = await query('SELECT I.productItemId, P.productId, I.qtyInStock, I.price, P.categoryId, P.name, P.description, P.sellerId FROM product P, product_item I WHERE P.productId = I.productId AND P.productId = ? AND P.dateDeleted IS NULL AND I.dateDeleted IS NULL', [itemId])
+    const respon = await query('SELECT * FROM product_item_with_details WHERE product_item_with_details.dateDeleted IS NULL AND product_item_with_details.productItemId = ?', [itemId])
     if (await respon.length == 0) {
-        return res.send("No such item");
+        return res.status(400).send("No such item");
     } else {
-        return res.send(respon[0]);
+        const item = respon[0];
+        item.images = await query('SELECT imagePath AS image_path FROM product_gallery WHERE productId = ? AND dateDeleted IS NULL', [item.productId]);
+        return res.send(item);
     }
 });
 // Create a new item listing and redirect to its page
