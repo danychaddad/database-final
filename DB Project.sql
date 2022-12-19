@@ -146,3 +146,5 @@ ALTER TABLE `PRODUCT_CATEGORY` ADD FOREIGN KEY (`parentCategoryId`) REFERENCES `
 
 ALTER TABLE `PRODUCT_GALLERY` ADD FOREIGN KEY (`productId`) REFERENCES `PRODUCT` (`productId`);
 
+CREATE VIEW product_item_with_details AS SELECT product_item.productId, product_item.productItemId, product_item.qtyInStock, product_item.price, product_item.dateCreated, product_item.dateUpdated, product_item.dateDeleted, product.name, product.sellerId, product.categoryId, product.description  FROM product_item, product WHERE product_item.productId = product.productId;
+CREATE VIEW product_item_with_details_and_image_path AS SELECT product_item_with_details.*, product_gallery.image_path FROM product_item_with_details JOIN (SELECT productId, MIN(imagePath) as image_path FROM product_gallery WHERE dateDeleted IS NULL GROUP BY productId) product_gallery  WHERE product_item_with_details.productId = product_gallery.productId AND product_item_with_details.dateDeleted IS NULL

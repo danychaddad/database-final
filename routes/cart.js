@@ -4,7 +4,7 @@ const con = require('../util/database');
 const util = require('util');
 const { getCurrentUser, generateJWT, findUser, isUserExists } = require('../util/user');
 const query = util.promisify(con.query).bind(con);
-const { findCartId, createCart, clearCart, addToCart, updateCartItem, getCartItems } = require('../util/cartUtil');
+const { findCartId, createCart, clearCart, addToCart, updateCartItem, getCartItems, getCartItemsById } = require('../util/cartUtil');
 const { findItem } = require('../util/itemUtil');
 const { clear } = require('console');
 const { createOrder } = require('../util/orderUtil');
@@ -13,18 +13,14 @@ const { createOrder } = require('../util/orderUtil');
 router.get('/', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId != -1) {
-        let response = await findCartId(currentUserId)
-        if (await response == -1) {
+        let response = await findCartId(currentUserId);
+        if (response == -1) {
             response = await createCart(currentUserId);
         }
-        const cartItems = await getCartItems(currentUserId);
-        if (await cartItems.length == 0) {
-            res.send("Your cart is empty!");
-        } else {
-            res.send(cartItems);
-        }
+        const cartItems = await getCartItemsById(response);
+        res.send(cartItems);
     } else {
-        res.send("You are not logged in!");
+        res.status(400).send("You are not logged in!");
     }
 });
 
@@ -32,7 +28,7 @@ router.get('/', async function (req, res) {
 router.delete('/', async function (req, res) {
     const currentUserId = await getCurrentUser(req.headers.token);
     if (currentUserId != -1) {
-        let response = await getCartItems(currentUserId);
+        let response = await getCartItemsByUserId(currentUserId);
         if (response.length == []) {
             res.send("Your cart is already empty!");
         } else {

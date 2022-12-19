@@ -6,56 +6,89 @@ const { getCurrentUser, generateJWT, findUser, isUserExists } = require('../util
 const query = util.promisify(con.query).bind(con);
 
 // View item specified by id
+router.get('/', async function(req, res) {
+    const currentUserId = await getCurrentUser(req.headers.token);
+    if(!currentUserId) return res.status(400).send("You are not logged in!");
+    try {
+        response = await query("SELECT * FROM product_item_with_details_and_image_path WHERE product_item_with_details_and_image_path.sellerId = ?;", [currentUserId]);
+        res.send(response);
+    } catch (err) {
+        res.status(400).send("Error: " + err.message);
+    }
+});
+router.delete('/:id', async function(req, res) {
+    const currentUserId = await getCurrentUser(req.headers.token);
+    if(!currentUserId) return res.status(400).send("You are not logged in!");
+    const itemId = req.params.id;
+    try {
+        //Get productId from product_item
+        response = await query("SELECT productId FROM product_item WHERE productItemId = ?;", [itemId]);
+        if(response.length == 0) return res.status(400).send("Item does not exist!");
+        //Check if user is the seller of the item
+        response = await query("SELECT sellerId FROM product WHERE productId = ?;", [response[0].productId]);
+        if(response[0].sellerId != currentUserId) return res.status(400).send("You are not the seller of this item!");
+        //Delete item
+        response = await query("UPDATE product_item SET dateDeleted = NOW() WHERE productItemId = ?;", [itemId, currentUserId]);
+        res.send("Item deleted!");
+    } catch (err) {
+        res.status(400).send("Error: " + err.message);
+    }
+});
+router.get('/products', async function(req, res) {
+    const currentUserId = await getCurrentUser(req.headers.token);
+    if(!currentUserId) return res.status(400).send("You are not logged in!");
+    try {
+        response = await query("SELECT product.productId, product.categoryId, product.name, product.description, product.sellerId, product_gallery.image_path FROM product JOIN (SELECT productId, MIN(imagePath) as image_path FROM product_gallery WHERE dateDeleted IS NULL GROUP BY productId) product_gallery  WHERE product.productId = product_gallery.productId AND product.dateDeleted IS NULL AND product.sellerId = ?;", [currentUserId]);
+        res.send(response);
+    } catch (err) {
+        res.status(400).send("Error: " + err.message);
+    }
+});
 router.get('/:id', async function (req, res) {
     const itemId = req.params.id;
-    const respon = await query('SELECT I.productItemId, P.productId, I.qtyInStock, I.price, P.categoryId, P.name, P.description, P.sellerId FROM product P, product_item I WHERE P.productId = I.productId AND P.productId = ? AND P.dateDeleted IS NULL AND I.dateDeleted IS NULL', [itemId])
+    const respon = await query('SELECT * FROM product_item_with_details WHERE product_item_with_details.dateDeleted IS NULL AND product_item_with_details.productItemId = ?', [itemId])
     if (await respon.length == 0) {
-        return res.send("No such item");
+        return res.status(400).send("No such item");
     } else {
-        return res.send(respon[0]);
+        const item = respon[0];
+        item.images = await query('SELECT imagePath AS image_path FROM product_gallery WHERE productId = ? AND dateDeleted IS NULL', [item.productId]);
+        return res.send(item);
     }
-})
-
+});
 // Create a new item listing and redirect to its page
-router.post('/new', async function (req, res) {
-    let { name, description, stock, price, catId, sellerId } = req.body;
+router.post('/new-product', async function(req, res) {
+    let { name, description, catId, imagePaths } = req.body;
     if (!catId) {
-        catId = null;
+        catId = 1;
     }
-    if (!(name && description && stock && price && sellerId)) {
-        return res.send("Fill out all fields!");
+    const currentUserId = await getCurrentUser(req.headers.token);
+    if(!currentUserId) return res.status(400).send("You are not logged in!");
+    if (!(name && description && imagePaths) || imagePaths.length == 0) {
+        return res.status(400).send("Fill out all fields!");
     }
-    await query('INSERT INTO product (sellerId, categoryId, name, description) VALUES (?,?,?,?);', [sellerId, catId, name, description]);
-    let respon = await query('SELECT last_insert_id() AS id');
-    let productId = await respon[0].id;
+    const productId = await query('INSERT INTO product (sellerId, categoryId, name, description) VALUES (?,?,?,?);', [currentUserId, catId, name, description]);
+    for(imagePath of imagePaths) 
+        await query('INSERT INTO product_gallery (productId, imagePath) VALUES (?,?)', [productId.insertId, imagePath]);
+    res.send({ productId : productId.insertId });
+})
+router.post('/new-product-item', async function(req, res) {
+    let { productId, quantity, price } = req.body;
+    if (!(productId && quantity && price)) {
+        return res.status(400).send("Fill out all fields!");
+    }
+    const currentUserId = await getCurrentUser(req.headers.token);
+    if(!currentUserId) return res.status(400).send("You are not logged in!");
+    const product = await query('SELECT * FROM product WHERE productId = ? AND dateDeleted IS NULL', [productId]);
+    if(product.length == 0) return res.status(400).send("Product not found!");
+    if(product[0].sellerId != currentUserId) return res.status(400).send("You do not own this product!");
     try {
-        await query('INSERT INTO product_item (productId, qtyInStock, price) VALUES (?,?,?)', [productId, stock, price]);
+        await query('INSERT INTO product_item (productId, qtyInStock, price) VALUES (?,?,?)', [productId, quantity, price]);
     } catch (e) {
-        return res.send("Something went wrong!")
+        return res.status(400).send("Something went wrong!")
     }
     res.send("Successfully added item!");
-})
+});
 
-router.delete('/:id', async function (req, res) {
-    const itemId = req.params.id;
-    const currentUserId = await getCurrentUser(req.headers.token);
-    let respon;
-    try {
-        respon = await query('SELECT sellerId AS sellerId FROM product WHERE productId = ? AND dateDeleted IS NULL', [itemId]);
-    } catch (e) {
-        res.send("Something went wrong!");
-    }
-    if (respon.length == 0) {
-        return res.send(`Item with ID ${itemId} doesn't exist!`);
-    }
-    if (await currentUserId == await respon[0].sellerId) {
-        query('UPDATE product_item SET dateDeleted = now() WHERE productId = ?', [itemId]);
-        query('UPDATE product SET dateDeleted = now() WHERE productId = ?', [itemId]);
-        return res.send("Deleted items!");
-    } else {
-        return res.send("You do not own this item");
-    }
-})
 router.route('/update/:id').
     // Checks if item exists, if it does, continue else send error.
     all(async function (req, res, next) {
