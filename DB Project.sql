@@ -63,8 +63,6 @@ CREATE TABLE `ORDER_ITEM` (
   `shopOrderId` int,
   `qty` int NOT NULL DEFAULT 1,
   `totalPrice` decimal(8,2),
-  `senderId` int,
-  `receiverId` int,
   `dateCreated` datetime NOT NULL DEFAULT NOW(),
   `dateDeleted` datetime DEFAULT null
 );
