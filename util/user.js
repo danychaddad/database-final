@@ -16,8 +16,9 @@ const findUser = async (username) => {
 
 const getCurrentUser = async (token) => {
     const decode = jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
-        if (err)
-            return -1;
+        if (err) 
+            return null;
+        
         return decoded.userId;
     })
     return decode;
@@ -30,7 +31,7 @@ const isUserExists = async (username) => {
 }
 
 const generateJWT = (userId) => {
-    return jwt.sign({ userId: userId }, process.env.TOKEN_SECRET, { expiresIn: 1800 });
+    return jwt.sign({ userId: userId }, process.env.TOKEN_SECRET, { expiresIn: "7 days" });
 }
 
 module.exports = {
