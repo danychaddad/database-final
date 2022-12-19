@@ -26,14 +26,18 @@ router.post('/register', async function (req, res) {
     res.status(401).send("Fill all fields!");
   } else {
     try {
-      console.log(username);
       if (await isUserExists(username)) {
         return res.send(`User ${username} already exists!`);
       }
       const hashedPassword = await hashPass(password);
-      await query(`INSERT INTO site_user (firstName, lastName, email, username, password, phoneNumber, gender, dateOfBirth) VALUES (?,?,?,?,?,?,?,?)`, [fname, lname, email, username, hashedPassword, phone, gender, dob]);
-      res.send("Registered");
+
+      //insert and get userId
+      const row = await query(`INSERT INTO site_user (firstName, lastName, email, username, password, phoneNumber, gender, dateOfBirth) VALUES (?,?,?,?,?,?,?,?)`, [fname, lname, email, username, hashedPassword, phone, gender, dob]);
+      userId = row.insertId;
+      const token = generateJWT(userId);
+      res.json({ token: token });
     } catch (err) {
+      console.log(err);
       res.send("Something went wrong.");
     }
   }
@@ -55,7 +59,7 @@ router.post('/login', async function (req, res) {
     const { username, password } = req.body;
     if (!username || !password) return res.send(`Please enter username and password`);
     if (!await isUserExists(username)) {
-      return res.send("User does not exist!");
+      return res.status(400).send("User does not exist!");
     }
     const userId = await findUser(username);
     const respon = await query(`SELECT password FROM site_user WHERE userId = ?`, [userId]);
@@ -64,7 +68,7 @@ router.post('/login', async function (req, res) {
       const token = generateJWT(userId);
       res.json({ token: token });
     } else {
-      res.send("Wrong password!")
+      res.status(400).send("Wrong password!")
     }
   }
 }
@@ -74,9 +78,8 @@ router.route('/update')
   .all(async function (req, res, next) {
     const token = req.headers.token;
     res.userId = await getCurrentUser(token);
-    console.log(await res.userId);
     if (await res.userId == -1) {
-      return res.send("Not logged in!");
+      return res.status(400).send("Not logged in!");
     }
     next();
   })
@@ -87,12 +90,12 @@ router.route('/update')
   .post(async function (req, res) {
     const { username, email, phone, fname, lname, displayPicture, dob, gender } = req.body;
     if (!(username && email && phone && fname && lname && dob && gender)) {
-      return res.send("Please fill out all fields!");
+      return res.status(400).send("Please fill out all fields!");
     }
     try {
       const respon = await query("SELECT username FROM site_user WHERE username = ? AND username NOT IN (SELECT username FROM site_user WHERE userId = ?)", [username, res.userId]);
       if (await respon.length != 0) {
-        return res.send("Username already in database!");
+        return res.status(400).send("Username already in database!");
       }
       await query("UPDATE site_user SET username = ?, email = ?, phoneNumber = ?, firstName = ?, lastName = ?, dateOfBirth = ?, gender = ? WHERE userId = ?", [username, email, phone, fname, lname, dob, gender, res.userId]);
     } catch (e) {
@@ -121,7 +124,7 @@ router.get('/me', async function (req, res) {
   const token = req.headers.token;
   const userId = await getCurrentUser(token);
   if (userId == -1) {
-    return res.send("Not logged in!");
+    return res.status(400).send("Not logged in!");
   }
   const respon = await query('SELECT userId, username, firstName, lastName, balance, email, displayPicture FROM site_user WHERE userId = ?', [userId]);
   return res.send(await respon[0]);

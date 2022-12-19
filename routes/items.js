@@ -8,7 +8,7 @@ const query = util.promisify(con.query).bind(con);
 // View item specified by id
 router.get('/:id', async function (req, res) {
     const itemId = req.params.id;
-    const respon = await query('SELECT P.sellerId, P.name, P.description, I.price, I.qtyInStock FROM product P, product_item I WHERE P.productId = I.productId AND P.productId = ?', [itemId])
+    const respon = await query('SELECT I.productItemId, P.productId, I.qtyInStock, I.price, P.categoryId, P.name, P.description, P.sellerId FROM product P, product_item I WHERE P.productId = I.productId AND P.productId = ? AND P.dateDeleted IS NULL AND I.dateDeleted IS NULL', [itemId])
     if (await respon.length == 0) {
         return res.send("No such item");
     } else {
