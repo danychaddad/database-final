@@ -30,7 +30,7 @@ const createOrder = async (userId, addressId, cartId) => {
     try {
         const cartItems = await getCartItems(userId);
         // Make sure that the user has enough money to buy the items in the cart
-        const total = getCartTotal(userId);
+        const total = await getCartTotal(userId);
         const userBalance = await query('SELECT balance FROM SITE_USER WHERE userId = ?', [userId]);
         if (userBalance[0].balance < total) {
             return -1;
@@ -46,14 +46,15 @@ const createOrder = async (userId, addressId, cartId) => {
         // Create the shop_order entity first, then create the order_item entities
         const response = await query('INSERT INTO shop_order (userId, shippingAddress) VALUES (?,?)', [userId, addressId]);
         const orderId = response.insertId;
-
         // UPDATE the buyer's balance
-        await query ('UPDATE SITE_USER SET balance = balance - ? WHERE userId = ?', [total, userId]);
-                
+        await query('UPDATE SITE_USER SET balance = balance - ? WHERE userId = ?', [total, userId]);
         for (let i = 0; i < cartItems.length; i++) {
             const item = cartItems[i];
+            console.log(item);
             const product = await findProductByItemId(item.productItemId);
-            const itemPrice = item.qty * product.price;
+            console.log(await product);
+            const itemPrice = await item.qty * product.price;
+            console.log(itemPrice);
             // UPDATE the seller's balance and create the order_item entity
             await query('UPDATE SITE_USER SET balance = balance + ? WHERE userId = ?', [itemPrice, product.sellerId]);
             await query(`INSERT INTO order_item (productItemId, shopOrderId, qty, totalPrice) VALUES (?, ?, ?, ?)`, [item.productItemId, orderId, item.qty, itemPrice]);
